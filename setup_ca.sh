@@ -37,6 +37,7 @@ fi
 #   priviledges a server runs. If anyone steals your private keys, 
 #   then things get really bad.
 mkdir -m 0755 -p "${rootdir}/myCA/private" "${rootdir}/myCA/certs" "${rootdir}/myCA/newcerts" "${rootdir}/myCA/crl"
+chmod 0700 "${rootdir}/myCA/private" "${rootdir}/myCA/newcerts"
 
 ######################################################################
 #We are going to copy the default openssl configuration file 
