@@ -15,6 +15,7 @@ PROGVERSION="0.1.1"
 create=false
 renew=false
 revoke=false
+force=false
 
 #
 # ARGUMENT HANDLING
@@ -22,7 +23,7 @@ revoke=false
 
 #Short options are one letter.  If an argument follows a short opt then put a colon (:) after it
 SHORTOPTS="hvc:r:x:"
-LONGOPTS="help,version,create:,renew:,revoke:"
+LONGOPTS="help,version,create:,renew:,revoke:,force"
 usage()
 {
   cat <<EOF
@@ -44,6 +45,7 @@ DESCRIPTION:
                      common name.
   -x,--revoke CNAME  Renew a key and generate CSR based on CNAME 
                      common name.
+  --force            Attempt to force certificate --create.
 
   This is part of the my_internal_ca project.
   https://github.com/sag47/my_internal_ca
@@ -60,7 +62,7 @@ while true; do
         exit 1
       ;;
     -v|--version)
-        echo "${PROGNAME} ${PROGVERSION}" 1>&2
+        echo "${PROGNAME} ${PROGVERSION} - github/sag47/my_internal_ca project" 1>&2
         exit 1
       ;;
     -c|--create)
@@ -77,6 +79,9 @@ while true; do
         revoke=true
         cname="${2}"
         shift 2
+      ;;
+    --force)
+        force=true
       ;;
     --)
         shift
@@ -95,6 +100,10 @@ done
 function preflight(){
   STATUS=0
   option=0
+  if ! [ -d "./certs" -a -d "./crl" -a -d "./newcerts" -a -d "./private" -a -f "./index.txt" -a -f "./openssl.my.cnf" -a -f "./serial" -a -f "./certs/myca.crt" -a -f "./private/myca.key" -a -f "./subject" ];then
+    echo "cert.sh can only be run from a managed certicate authority directory." 1>&2
+    exit 1
+  fi
   for x in ${create} ${renew} ${revoke};do
     if ${x};then
       ((option++))
@@ -112,6 +121,11 @@ function preflight(){
     echo "Perhaps you need to --create a new CSR?"
     STATUS=1
   fi
+  if ! ${force} && ${create} && [ -f "./private/${cname}.key" -o -f "./certs/${cname}.crt" ];then
+    echo "You must revoke the old ${cname} certificate first or renew your current certificate." 1>&2
+    echo "You may may force this action with --force.  This is generally not recomended."
+    STATUS=1
+  fi
   return ${STATUS}
 }
 
@@ -125,31 +139,18 @@ if ! preflight 1>&2;then
   echo "Perhaps try --help option." 1>&2
   exit 1
 fi
-exit
 
 #set the reqdir where certificate signing requests will be temporarily stored
 reqdir="${reqdir:-/tmp}"
 #remove trailing slash if any
 reqdir="${reqdir%/}"
 
-if ! [ -d "./certs" -a -d "./crl" -a -d "./newcerts" -a -d "./private" -a -f "./index.txt" -a -f "./openssl.my.cnf" -a -f "./serial" -a -f "./certs/myca.crt" -a -f "./private/myca.key" -a -f "./subject" ];then
-  echo "cert.sh can only be run from a managed certicate authority directory." 1>&2
-  exit 1
-fi
 
-if [ -z "${1}" ];then
-  echo "Specify the common name of the certificate as an arg." 1>&2
-  exit 1
-fi
-
+if ${create};then
 #do some precleanup if stuff exists
-if [ -f "./private/${1}.key" ] && [ -f "./certs/${1}.crt" ];then
-  echo "You must revoke the old ${1} certificate first!" 1>&2
-  echo "openssl ca -config openssl.my.cnf -revoke \"./certs/${1}.crt\"" 1>&2
-  echo 'After revoking you should backup the old certificate and key and then delete them from ./certs and ./private.' 1>&2
-  exit 1
-fi
 rm -f "${reqdir}/${1}.csr" "./private/${1}.key" "./certs/${1}.crt"
+
+  #echo "openssl ca -config openssl.my.cnf -revoke \"./certs/${1}.crt\"" 1>&2
 
 #start the signing process
 
