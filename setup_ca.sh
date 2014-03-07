@@ -7,7 +7,17 @@
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
 
-rootdir="."
+rootdir="${rootdir:-.}"
+#remove trailing slash if any
+rootdir="${rootdir%/}"
+#test to make sure that the rootdir actually exists.
+if [ ! -d "${rootdir}" ];then
+  echo "${rootdir} does not exist or is not a directory!" 1>&2
+  exit 1
+elif [ -d "${rootdir}/myCA" ];then
+  echo "CA already created at ${rootdir}/myCA.  Create it elsewhere or choose a new path." 1>&2
+  exit 1
+fi
 
 ######################################################################
 #myCA is our Certificate Authority’s directory.
@@ -77,3 +87,6 @@ openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./priva
 #                   protected with a passphrase you should restrict 
 #                   access to it, so that only root can read it:
 chmod 0400 "./private/myca.key"
+
+######################################################################
+#Copy the sample subject
