@@ -7,6 +7,7 @@
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
 
+#set the rootdir where the certificate authority myCA will be created.
 rootdir="${rootdir:-.}"
 #remove trailing slash if any
 rootdir="${rootdir%/}"
@@ -16,6 +17,9 @@ if [ ! -d "${rootdir}" ];then
   exit 1
 elif [ -d "${rootdir}/myCA" ];then
   echo "CA already created at ${rootdir}/myCA.  Create it elsewhere or choose a new path." 1>&2
+  exit 1
+elif [ ! -f "./openssl.my.cnf" ];then
+  echo "This setup script must be run from the repository directory where openssl.my.cnf is located." 1>&2
   exit 1
 fi
 
@@ -37,9 +41,8 @@ mkdir -m 0755 -p "${rootdir}/myCA/private" "${rootdir}/myCA/certs" "${rootdir}/m
 ######################################################################
 #We are going to copy the default openssl configuration file 
 #   (openssl.cnf) to our CA’s directory.
-#On Ubuntu it is /etc/ssl; on Fedora it is /etc/pki/tls
-#This script assumes Ubuntu.
-cp /etc/ssl/openssl.cnf "${rootdir}/myCA/openssl.my.cnf"
+#On Ubuntu it is /etc/ssl; on Fedora it is /etc/pki/tls originally called openssl.cnf
+cp ./openssl.my.cnf "${rootdir}/myCA/openssl.my.cnf"
 
 ######################################################################
 #This file does not need to be world readable, so we change its 
@@ -69,7 +72,7 @@ echo '01' > "${rootdir}/myCA/serial"
 #  CRL – Certificate Revokation List (This can be publicly 
 #        distributed)
 #Create the CA Certificate and Key
-cd "${rootdir}/myCA/"
+pushd "${rootdir}/myCA/" &> /dev/null
 
 ######################################################################
 #Create a self-signed certificate with the default CA extensions which 
@@ -90,3 +93,8 @@ chmod 0400 "./private/myca.key"
 
 ######################################################################
 #Copy the sample subject
+cp ~1/subject.example ./subject
+echo ""
+echo "A sample subject has been created at ${rootdir}/myCA/subject."
+echo "This is the subject for your newly created certificates to be signed.  You should edit this for your org."
+echo "Note: you must leave the equal sign '=' at the end of the subject."
