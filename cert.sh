@@ -5,7 +5,7 @@
 #Linux 3.11.0-12-generic x86_64
 #GNU bash, version 4.2.45(1)-release (x86_64-pc-linux-gnu)
 
-#debugging enable
+#exit upon first error
 set -e
 
 PROGNAME="${0##*/}"
@@ -127,6 +127,17 @@ function preflight(){
     echo "You may may force this action with --force.  This is generally not recomended."
     STATUS=1
   fi
+  if ! ${force} && ${renew} && [ ! -f "./private/${cname}.key" -o ! -f "./certs/${cname}.crt" ];then
+    echo "Missing certificate or key or both for ${cname}."
+    if [ -f "./private/${cname}.key" ];then
+      echo "Certificate renewal may be forced using --force.  This is generally not recommended."
+    fi
+    STATUS=1
+  fi
+  if ${renew} && [ ! -f "./private/${cname}.key" ];then
+    echo "This action can't be forced by cause ./private/${cname}.key is missing."
+    STATUS=1
+  fi
   if ${revoke} && [ ! -f "./private/${cname}.key" -a ! -f "./certs/${cname}.crt" ];then
     echo "Both the certificate and private key must exist for revoke to work."
     if [ -f "./private/${cname}.key" ];then
@@ -181,19 +192,72 @@ if ${create};then
   echo "" 1>&2
   echo "Verify certificate..." 1>&2
   openssl verify -purpose sslserver -CAfile "./certs/myca.crt" "./certs/${cname}.crt" 1>&2
+
+elif ${renew};then
+  if [ -f "./certs/${cname}.crt" ];then
+    #revoke the certificate
+    echo "Revoke certificate." 1>&2
+    openssl ca -config openssl.my.cnf -revoke "./certs/${cname}.crt"
+
+    #make a backup directory to store revoked certificates and keys
+    if [ ! -d "./backup" ];then
+      mkdir "./backup"
+    fi
+
+    #back up the old certificate and key so it is no longer tracked for renewel but can still be referenced if necessary.
+    DATE="$(date +%Y-%m-%d-%s)"
+    echo "Backup old certificate and key." 1>&2
+    cp "./certs/${cname}.crt" "./backup/${cname}_${DATE}.crt"
+    cp "./private/${cname}.key" "./backup/${cname}_${DATE}.key"
+  fi
+
+  #grab the subject from the subject file
+  subj="$(head -n1 ./subject)${cname}"
+
+  #renew the certificate
+  echo "Renew certificate for ${cname}." 1>&2
+  openssl req -out "${reqdir}/${cname}.csr" -new -subj "${subj}" -key "./private/${cname}.key"
+
+  #sign the certificate
+  rm -f "./certs/${cname}.crt"
+  openssl ca -config openssl.my.cnf -policy policy_anything -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
+
+  #generate the current certificate revokation list
+  echo "Generate a new certificate revocation list." 1>&2
+  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
+  cp "./crl.pem" "./crl/crl_${DATE}.pem"
+  echo "The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
+
+  #final cleanup and security measures
+  rm -f "${reqdir}/${cname}.csr"
+  chmod 644 "./certs/${cname}.crt"
+  chmod 600 "./private/${cname}.key"
+
+  #run some tests
+  echo "" 1>&2
+  echo "" 1>&2
+  echo "Certificate signing information..." 1>&2
+  openssl x509 -subject -issuer -enddate -noout -in "./certs/${cname}.crt" 1>&2
+  echo "" 1>&2
+  echo "Verify certificate..." 1>&2
+  openssl verify -purpose sslserver -CAfile "./certs/myca.crt" "./certs/${cname}.crt" 1>&2
+
 elif ${revoke};then
   #revoke the certificate
   echo "Revoke certificate." 1>&2
   openssl ca -config openssl.my.cnf -revoke "./certs/${cname}.crt"
+
   #make a backup directory to store revoked certificates and keys
   if [ ! -d "./backup" ];then
     mkdir "./backup"
   fi
-  DATE="$(date +%Y-%m-%d-%s)"
+
   #back up the old certificate and key so it is no longer tracked for renewel but can still be referenced if necessary.
+  DATE="$(date +%Y-%m-%d-%s)"
   echo "Backup old certificate and key." 1>&2
   mv "./certs/${cname}.crt" "./backup/${cname}_${DATE}.crt"
   mv "./private/${cname}.key" "./backup/${cname}_${DATE}.key"
+
   #generate the current certificate revokation list
   echo "Generate a new certificate revocation list." 1>&2
   openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
