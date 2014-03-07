@@ -23,7 +23,7 @@ Once you have your certificate authority set up edit the `myCA/subject` file whi
 
 ### Ready to manage certificates
 
-Now that you have everything set up you can start using `cert.sh` to manage your signed certificates.  To see information on the `cert.sh` command see `cert.sh --help`.
+Now that you have everything set up you can start using `cert.sh` to manage your signed certificates.  `cert.sh` must be run from within the `myCA` working directory wherever it might be.  To see information on the `cert.sh` command see `cert.sh --help`.
 
 #### Sign new certificates
 
