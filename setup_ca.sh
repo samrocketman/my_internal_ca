@@ -7,6 +7,8 @@
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
 
+rootdir="."
+
 ######################################################################
 #myCA is our Certificate Authority’s directory.
 #myCA/certs directory is where our server certificates will be placed.
@@ -20,30 +22,29 @@
 #   so that they can be read only by root, or the user with whose 
 #   priviledges a server runs. If anyone steals your private keys, 
 #   then things get really bad.
-######################################################################
-mkdir -m 0755 -p ./myCA/private ./myCA/certs ./myCA/newcerts ./myCA/crl
+mkdir -m 0755 -p "${rootdir}/myCA/private" "${rootdir}/myCA/certs" "${rootdir}/myCA/newcerts" "${rootdir}/myCA/crl"
 
 ######################################################################
 #We are going to copy the default openssl configuration file 
 #   (openssl.cnf) to our CA’s directory.
 #On Ubuntu it is /etc/ssl; on Fedora it is /etc/pki/tls
 #This script assumes Ubuntu.
-cp /etc/ssl/openssl.cnf ./myCA/openssl.my.cnf
+cp /etc/ssl/openssl.cnf "${rootdir}/myCA/openssl.my.cnf"
 
 ######################################################################
 #This file does not need to be world readable, so we change its 
 #attributes.
-chmod 0600 ./myCA/openssl.my.cnf
+chmod 0600 "${rootdir}/myCA/openssl.my.cnf"
 
 ######################################################################
 #We also need to create two other files. This file serves as a 
 #database for openssl.
-touch ./myCA/index.txt
+touch "${rootdir}/myCA/index.txt"
 
 ######################################################################
 #The following file contains the next certificate’s serial number. 
 #Since we have not created any certificates yet, we set it to "01".
-echo '01' > ./myCA/serial
+echo '01' > "${rootdir}/myCA/serial"
 
 ######################################################################
 #Things to remember about SSL file extensions
@@ -57,5 +58,22 @@ echo '01' > ./myCA/serial
 #        Permissions should be restrictive on these files.
 #  CRL – Certificate Revokation List (This can be publicly 
 #        distributed)
+#Create the CA Certificate and Key
+cd "${rootdir}/myCA/"
 
+######################################################################
+#Create a self-signed certificate with the default CA extensions which 
+#is valid for 5 years. You will be prompted for a passphrase for your 
+#CA's private key. Be sure that you set a strong passphrase. Then you 
+#will need to provide some info about your CA. Fill in whatever you 
+#like.
+openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 1825
 
+######################################################################
+#Two files are created:
+#certs/myca.crt   – This is your CA's certificate and can be publicly 
+#                   available and of course world readable.
+#private/myca.key – This is your CA’s private key. Although it is 
+#                   protected with a passphrase you should restrict 
+#                   access to it, so that only root can read it:
+chmod 0400 "./private/myca.key"
