@@ -21,11 +21,35 @@ There is an optional `rootdir` environment variable that can be passed to specif
 
 Once you have your certificate authority set up edit the `myCA/subject` file which will be used as the subject when generating your certificates.  Be sure to leave the `/CN=` at the end of the file because after that will be the first argument of the `cert.sh` script.  This follows the standard openssl subject format so read the openssl man page to learn more (`man req` specifically the topic `-subj arg`).
 
-### Sign certificates
+### Ready to manage certificates
 
-Now that you have everything set up you can start using `cert.sh` to generate your signed certificates.  The first argument of `cert.sh` is simply the server name in which the certificate will be signed.  By default certificate requests will be temporarily stored in `/tmp`.  If this is not desired there is an optional `reqir` environment variable that can be passed to specify a custom temporary directory for signing certificate requests.  An example follows.
+Now that you have everything set up you can start using `cert.sh` to manage your signed certificates.  To see information on the `cert.sh` command see `cert.sh --help`.
 
-    reqdir="/requests" ../cert.sh myserver.local
+#### Sign new certificates
+
+    ../cert.sh --create myserver.local
+
+A new signed certificate will be placed in `./myCA/certs/` and the private key will be in `./myCA/private/`.
+
+#### Renew certificates
+
+    ../cert.sh --renew myserver.local
+
+The certificate in `./myCA/certs/myserver.local.crt` and the key in `./myCA/private/myserver.local.key` will reflect the latest certificate.
+
+A new certificate revocation list (crl) will be generated.  The latest is stored in `./myCA/crl.pem` and any previously published CRLs can be viewed at `./myCA/crl/crl_*.pem`.  A backup of the certificate and key will be maintained in `./myCA/backup` which is autocreated.
+
+#### Revoke certificates
+
+    ../cert.sh --revoke myserver.local
+
+A new certificate revocation list (crl) will be generated.  The latest is stored in `./myCA/crl.pem` and any previously published CRLs can be viewed at `./myCA/crl/crl_*.pem`.  A backup of the certificate and key will be maintained in `./myCA/backup` which is autocreated.
+
+#### Custom certificate request directory
+
+By default certificate requests will be temporarily stored in `/tmp`.  If this is not desired there is an optional `reqir` environment variable that can be passed to specify a custom temporary directory for signing certificate requests.  An example follows.
+
+    reqdir="/requests" ../cert.sh --create myserver.local
 
 By default the certificate authority will be created within this repository so using `../cert.sh` is the recomended method.  However, in the case of a custom `rootdir` you can add `cert.sh` to your `$PATH` and execute it anywhere you like.  `cert.sh` will automatically fail if the current working directory is not the root of the `myCA` directory.
 
