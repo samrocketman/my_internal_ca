@@ -82,6 +82,7 @@ while true; do
       ;;
     --force)
         force=true
+        shift 1
       ;;
     --)
         shift
@@ -122,8 +123,15 @@ function preflight(){
     STATUS=1
   fi
   if ! ${force} && ${create} && [ -f "./private/${cname}.key" -o -f "./certs/${cname}.crt" ];then
-    echo "You must revoke the old ${cname} certificate first or renew your current certificate." 1>&2
+    echo "You must revoke the old ${cname} certificate first or renew your current certificate."
     echo "You may may force this action with --force.  This is generally not recomended."
+    STATUS=1
+  fi
+  if ${revoke} && [ ! -f "./private/${cname}.key" -a ! -f "./certs/${cname}.crt" ];then
+    echo "Both the certificate and private key must exist for revoke to work."
+    if [ -f "./private/${cname}.key" ];then
+      echo "The private key ./private/${cname}.key seems to exist.  Did you mean to --renew?"
+    fi
     STATUS=1
   fi
   return ${STATUS}
@@ -145,7 +153,6 @@ reqdir="${reqdir:-/tmp}"
 #remove trailing slash if any
 reqdir="${reqdir%/}"
 
-#echo "openssl ca -config openssl.my.cnf -revoke \"./certs/${1}.crt\"" 1>&2
 if ${create};then
   #do some precleanup if stuff exists
   if ${force};then
@@ -174,4 +181,22 @@ if ${create};then
   echo "" 1>&2
   echo "Verify certificate..." 1>&2
   openssl verify -purpose sslserver -CAfile "./certs/myca.crt" "./certs/${cname}.crt" 1>&2
+elif ${revoke};then
+  #revoke the certificate
+  echo "Revoke certificate." 1>&2
+  openssl ca -config openssl.my.cnf -revoke "./certs/${cname}.crt"
+  #make a backup directory to store revoked certificates and keys
+  if [ ! -d "./backup" ];then
+    mkdir "./backup"
+  fi
+  DATE="$(date +%Y-%m-%d-%s)"
+  #back up the old certificate and key so it is no longer tracked for renewel but can still be referenced if necessary.
+  echo "Backup old certificate and key." 1>&2
+  mv "./certs/${cname}.crt" "./backup/${cname}_${DATE}.crt"
+  mv "./private/${cname}.key" "./backup/${cname}_${DATE}.key"
+  #generate the current certificate revokation list
+  echo "Generate a new certificate revocation list." 1>&2
+  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
+  cp "./crl.pem" "./crl/crl_${DATE}.pem"
+  echo "Finished revoking ${cname}.  The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 fi
