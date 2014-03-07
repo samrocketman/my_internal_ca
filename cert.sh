@@ -145,34 +145,33 @@ reqdir="${reqdir:-/tmp}"
 #remove trailing slash if any
 reqdir="${reqdir%/}"
 
-
+#echo "openssl ca -config openssl.my.cnf -revoke \"./certs/${1}.crt\"" 1>&2
 if ${create};then
-#do some precleanup if stuff exists
-rm -f "${reqdir}/${1}.csr" "./private/${1}.key" "./certs/${1}.crt"
+  #do some precleanup if stuff exists
+  if ${force};then
+    rm -f "${reqdir}/${cname}.csr" "./private/${cname}.key" "./certs/${cname}.crt"
+  fi
 
-  #echo "openssl ca -config openssl.my.cnf -revoke \"./certs/${1}.crt\"" 1>&2
+  #grab the subject from the subject file
+  subj="$(head -n1 ./subject)${cname}"
 
-#start the signing process
+  #generate the private key and certificate signing request
+  openssl req -out "${reqdir}/${cname}.csr" -new -newkey rsa:2048 -nodes -subj "${subj}" -keyout "./private/${cname}.key" -days 365
 
-#grab the subject from the subject file
-subj="$(head -n1 ./subject)${1}"
+  #sign the certificate
+  openssl ca -config openssl.my.cnf -policy policy_anything -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
 
-#generate the private key and certificate signing request
-openssl req -out "${reqdir}/${1}.csr" -new -newkey rsa:2048 -nodes -subj "${subj}" -keyout "./private/${1}.key" -days 365
+  #final cleanup and security measures
+  rm -f "${reqdir}/${cname}.csr"
+  chmod 644 "./certs/${cname}.crt"
+  chmod 600 "./private/${cname}.key"
 
-#sign the certificate
-openssl ca -config openssl.my.cnf -policy policy_anything -out "./certs/${1}.crt" -infiles "${reqdir}/${1}.csr"
-
-#final cleanup and security measures
-rm -f "${reqdir}/${1}.csr"
-chmod 644 "./certs/${1}.crt"
-chmod 600 "./private/${1}.key"
-
-#run some tests
-echo "" 1>&2
-echo "" 1>&2
-echo "Certificate signing information..." 1>&2
-openssl x509 -subject -issuer -enddate -noout -in "./certs/${1}.crt" 1>&2
-echo "" 1>&2
-echo "Verify certificate..." 1>&2
-openssl verify -purpose sslserver -CAfile "./certs/myca.crt" "./certs/${1}.crt" 1>&2
+  #run some tests
+  echo "" 1>&2
+  echo "" 1>&2
+  echo "Certificate signing information..." 1>&2
+  openssl x509 -subject -issuer -enddate -noout -in "./certs/${cname}.crt" 1>&2
+  echo "" 1>&2
+  echo "Verify certificate..." 1>&2
+  openssl verify -purpose sslserver -CAfile "./certs/myca.crt" "./certs/${cname}.crt" 1>&2
+fi
