@@ -18,8 +18,8 @@ if [ ! -d "${rootdir}" ];then
 elif [ -d "${rootdir}/myCA" ];then
   echo "CA already created at ${rootdir}/myCA.  Create it elsewhere or choose a new path." 1>&2
   exit 1
-elif [ ! -f "./openssl.my.cnf" ];then
-  echo "This setup script must be run from the repository directory where openssl.my.cnf is located." 1>&2
+elif [ ! -f "./openssl.my.cnf" -a ! -f "./subject.example" ];then
+  echo "This setup script must be run from the repository directory where openssl.my.cnf and subject.example is located." 1>&2
   exit 1
 fi
 
@@ -98,4 +98,4 @@ cp ~1/subject.example ./subject
 echo ""
 echo "A sample subject has been created at ${rootdir}/myCA/subject."
 echo "This is the subject for your newly created certificates to be signed.  You should edit this for your org."
-echo "Note: you must leave the equal sign '=' at the end of the subject."
+echo "Note: you must leave the '/CN=' at the end of the subject."
