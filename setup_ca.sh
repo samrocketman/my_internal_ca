@@ -96,6 +96,6 @@ chmod 0400 "./private/myca.key"
 #Copy the sample subject
 cp ~1/subject.example ./subject
 echo ""
-echo "A sample subject has been created at ${rootdir}/myCA/subject."
+echo "A sample subject has been created at ${rootdir}/myCA/subject"
 echo "This is the subject for your newly created certificates to be signed.  You should edit this for your org."
 echo "Note: you must leave the '/CN=' at the end of the subject."
