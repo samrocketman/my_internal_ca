@@ -5,6 +5,128 @@
 #Linux 3.11.0-12-generic x86_64
 #GNU bash, version 4.2.45(1)-release (x86_64-pc-linux-gnu)
 
+#debugging enable
+set -e
+
+PROGNAME="${0##*/}"
+PROGVERSION="0.1.1"
+
+#program default variables
+create=false
+renew=false
+revoke=false
+
+#
+# ARGUMENT HANDLING
+#
+
+#Short options are one letter.  If an argument follows a short opt then put a colon (:) after it
+SHORTOPTS="hvc:r:x:"
+LONGOPTS="help,version,create:,renew:,revoke:"
+usage()
+{
+  cat <<EOF
+######################################################################
+${PROGNAME} ${PROGVERSION} - MIT License by Sam Gleske
+
+USAGE:
+  ${PROGNAME} [--create|--renew|--revoke] CNAME
+  ${PROGNAME} [-c|-r|-x] CNAME
+
+DESCRIPTION:
+  This program generates signed certificates in a self managed CA.  It
+  may also renew or revoke certificates.
+
+  -h,--help          Show help
+  -v,--version       Show program version
+  -c,--create CNAME  Create a key and CSR based on CNAME common name.
+  -r,--renew CNAME   Renew a key and generate CSR based on CNAME 
+                     common name.
+  -x,--revoke CNAME  Renew a key and generate CSR based on CNAME 
+                     common name.
+
+  This is part of the my_internal_ca project.
+  https://github.com/sag47/my_internal_ca
+
+
+EOF
+}
+ARGS=$(getopt -s bash --options "${SHORTOPTS}" --longoptions "${LONGOPTS}" --name "${PROGNAME}" -- "$@")
+eval set -- "$ARGS"
+while true; do
+  case $1 in
+    -h|--help)
+        usage 1>&2
+        exit 1
+      ;;
+    -v|--version)
+        echo "${PROGNAME} ${PROGVERSION}" 1>&2
+        exit 1
+      ;;
+    -c|--create)
+        create=true
+        cname="${2}"
+        shift 2
+      ;;
+    -r|--renew)
+        renew=true
+        cname="${2}"
+        shift 2
+      ;;
+    -x|--revoke)
+        revoke=true
+        cname="${2}"
+        shift 2
+      ;;
+    --)
+        shift
+        break
+      ;;
+    *)
+        shift
+      ;;
+    esac
+done
+
+#
+# Program functions
+#
+
+function preflight(){
+  STATUS=0
+  option=0
+  for x in ${create} ${renew} ${revoke};do
+    if ${x};then
+      ((option++))
+    fi
+  done
+  if [ "${option}" -eq "0" ];then
+    echo "Must choose at least one action: --create, --renew, --revoke."
+    STATUS=1
+  elif [ "${option}" -gt "1" ];then
+    echo "May not choose more than one action.  Only one: --create, --renew, --revoke"
+    STATUS=1
+  fi
+  if ${renew} && [ ! -f "./private/${cname}.key" ];then
+    echo "${cname}.key does not exist!"
+    echo "Perhaps you need to --create a new CSR?"
+    STATUS=1
+  fi
+  return ${STATUS}
+}
+
+#
+# Main execution
+#
+
+#Run a preflight check on options for compatibility.
+if ! preflight 1>&2;then
+  echo "Command aborted due to previous errors." 1>&2
+  echo "Perhaps try --help option." 1>&2
+  exit 1
+fi
+exit
+
 #set the reqdir where certificate signing requests will be temporarily stored
 reqdir="${reqdir:-/tmp}"
 #remove trailing slash if any
