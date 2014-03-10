@@ -62,7 +62,8 @@ Using self signed certificates is always a bad idea. It's far more secure to sel
 1. The [xca project][xca] provides a graphical front end to certificate authority management in openssl.  It is available for Windows, Linux, and Mac OS.
 2. The OpenVPN project provides a nice [set of scripts][ovpn_scripts] for managing a certificate authority as well.
 3. [Be your own CA][yourca_tut] tutorial provides a more manual method of certificate authority management outside of scripts or UI.  It provides openssl commands for certificate authority management.  Additionaly, one can read up on certificate management in the [SSL Certificates HOWTO][tldp_certs] at The Linux Documentation Project.
-4. Use my scripts in this repository which is based on option `3` in this list.
+4. Use my scripts in this repository which is based on option `3` in this list.  Supports server certs only.
+5. Use [certificate-automation][cert_auto] which is similar to these scripts organized slightly differently.  Supports client certs as well.
 
 Once a certificate authority is self managed simply add the CA certificate to all browsers and mobile devices. Enjoy secure and validated certificates everywhere.  If a server service is designated for public access then self managing a certificate authority may not be the best option.  Signed certificates should still be the preferred method  to secure your public service.  The [StartCom SSL Certificate Authority][startcom_ssl] provides a free service to sign Class 1 SSL certificates.  If you are attempting payment transactions you should pay for an extended validation (EV) certificate from one of the EV issuing certificate authorities.
 
@@ -71,3 +72,4 @@ Once a certificate authority is self managed simply add the CA certificate to al
 [yourca_tut]: http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
 [tldp_certs]: http://www.tldp.org/HOWTO/SSL-Certificates-HOWTO/x195.html
 [startcom_ssl]: http://cert.startcom.org/
+[cert_auto]: https://github.com/berico-rclayton/certificate-automation

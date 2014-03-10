@@ -13,7 +13,6 @@
 
 import os
 import pexpect
-from sys import argv
 from sys import exit
 from sys import stderr
 command="./cert.sh"
