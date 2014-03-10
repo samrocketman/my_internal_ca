@@ -11,8 +11,13 @@ set -e
 PROGNAME="${0##*/}"
 PROGVERSION="0.1.1"
 
+#Certificate generation defaults
+strength="2048"
+length="365"
+
 #program default variables
 create=false
+crl=false
 renew=false
 revoke=false
 force=false
@@ -23,7 +28,7 @@ force=false
 
 #Short options are one letter.  If an argument follows a short opt then put a colon (:) after it
 SHORTOPTS="hvc:r:x:"
-LONGOPTS="help,version,create:,renew:,revoke:,force"
+LONGOPTS="help,version,create:,crl,renew:,revoke:,force"
 usage()
 {
   cat <<EOF
@@ -41,6 +46,7 @@ DESCRIPTION:
   -h,--help          Show help
   -v,--version       Show program version
   -c,--create CNAME  Create a key and CSR based on CNAME common name.
+  --crl              Generate a new Certificate Revocation List.
   -r,--renew CNAME   Renew a key and generate CSR based on CNAME 
                      common name.
   -x,--revoke CNAME  Renew a key and generate CSR based on CNAME 
@@ -69,6 +75,10 @@ while true; do
         create=true
         cname="${2}"
         shift 2
+      ;;
+    --crl)
+        crl=true
+        shift 1
       ;;
     -r|--renew)
         renew=true
@@ -105,16 +115,16 @@ function preflight(){
     echo "cert.sh can only be run from a managed certicate authority directory." 1>&2
     exit 1
   fi
-  for x in ${create} ${renew} ${revoke};do
+  for x in ${create} ${crl} ${renew} ${revoke};do
     if ${x};then
       ((option++))
     fi
   done
   if [ "${option}" -eq "0" ];then
-    echo "Must choose at least one action: --create, --renew, --revoke."
+    echo "Must choose at least one action: --create, --crl, --renew, --revoke."
     STATUS=1
   elif [ "${option}" -gt "1" ];then
-    echo "May not choose more than one action.  Only one: --create, --renew, --revoke"
+    echo "May not choose more than one action.  Only one: --create, --crl, --renew, --revoke."
     STATUS=1
   fi
   if ${renew} && [ ! -f "./private/${cname}.key" ];then
@@ -174,7 +184,7 @@ if ${create};then
   subj="$(head -n1 ./subject)${cname}"
 
   #generate the private key and certificate signing request
-  openssl req -out "${reqdir}/${cname}.csr" -new -newkey rsa:2048 -nodes -subj "${subj}" -keyout "./private/${cname}.key" -days 365
+  openssl req -out "${reqdir}/${cname}.csr" -new -newkey rsa:${strength} -nodes -subj "${subj}" -keyout "./private/${cname}.key" -days ${length}
 
   #sign the certificate
   openssl ca -config openssl.my.cnf -policy policy_anything -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
@@ -192,6 +202,14 @@ if ${create};then
   echo "" 1>&2
   echo "Verify certificate..." 1>&2
   openssl verify -purpose sslserver -CAfile "./certs/myca.crt" "./certs/${cname}.crt" 1>&2
+
+elif ${crl};then
+  #generate the current certificate revokation list
+  DATE="$(date +%Y-%m-%d-%s)"
+  echo "Generate a new certificate revocation list." 1>&2
+  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
+  cp "./crl.pem" "./crl/crl_${DATE}.pem"
+  echo "The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 
 elif ${renew};then
   if [ -f "./certs/${cname}.crt" ];then
@@ -216,7 +234,7 @@ elif ${renew};then
 
   #renew the certificate
   echo "Renew certificate for ${cname}." 1>&2
-  openssl req -out "${reqdir}/${cname}.csr" -new -subj "${subj}" -key "./private/${cname}.key"
+  openssl req -out "${reqdir}/${cname}.csr" -new -subj "${subj}" -key "./private/${cname}.key" -days ${length}
 
   #sign the certificate
   rm -f "./certs/${cname}.crt"
@@ -224,7 +242,7 @@ elif ${renew};then
 
   #generate the current certificate revokation list
   echo "Generate a new certificate revocation list." 1>&2
-  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
+  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text -noout > ./crl.pem
   cp "./crl.pem" "./crl/crl_${DATE}.pem"
   echo "The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 
@@ -260,7 +278,7 @@ elif ${revoke};then
 
   #generate the current certificate revokation list
   echo "Generate a new certificate revocation list." 1>&2
-  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
+  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text -noout > ./crl.pem
   cp "./crl.pem" "./crl/crl_${DATE}.pem"
   echo "Finished revoking ${cname}.  The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 fi
