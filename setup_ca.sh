@@ -80,8 +80,8 @@ pushd "${rootdir}/myCA/" &> /dev/null
 #is valid for 5 years. You will be prompted for a passphrase for your 
 #CA's private key. Be sure that you set a strong passphrase. Then you 
 #will need to provide some info about your CA. Fill in whatever you 
-#like.
-openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 1825
+#like.  CA is for 500 years (-days).
+openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 182500
 
 ######################################################################
 #Two files are created:
@@ -94,9 +94,10 @@ chmod 0400 "./private/myca.key"
 
 ######################################################################
 #Copy the certificate signing executables
-cp ~1/cert.sh ./
+cp ~1/autocrl.py ./
 cp ~1/autosign.py ./
-chmod 755 ./autosign.py ./cert.sh
+cp ~1/cert.sh ./
+chmod 755 ./autocrl.py ./autosign.py ./cert.sh
 
 ######################################################################
 #Copy the sample subject
