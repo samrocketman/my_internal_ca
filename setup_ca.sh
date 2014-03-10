@@ -93,6 +93,12 @@ openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./priva
 chmod 0400 "./private/myca.key"
 
 ######################################################################
+#Copy the certificate signing executables
+cp ~1/cert.sh ./
+cp ~1/autosign.py ./
+chmod 755 ./autosign.py ./cert.sh
+
+######################################################################
 #Copy the sample subject
 cp ~1/subject.example ./subject
 echo ""
