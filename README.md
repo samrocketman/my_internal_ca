@@ -57,6 +57,8 @@ By default certificate requests will be temporarily stored in `/tmp`.  If this i
 
 # Additional information and alternatives
 
+### Private CA Alternatives
+
 Using self signed certificates is always a bad idea. It's far more secure to self manage a certificate authority than it is to use self signed certificates. Running a certificate authority is easy. There are four recommended options for managing a certificate authority for signing certificates.
 
 1. The [xca project][xca] provides a graphical front end to certificate authority management in openssl.  It is available for Windows, Linux, and Mac OS.
@@ -65,7 +67,16 @@ Using self signed certificates is always a bad idea. It's far more secure to sel
 4. Use my scripts in this repository which is based on option `3` in this list.  Supports server certs only.
 5. Use [certificate-automation][cert_auto] which is similar to these scripts organized slightly differently.  Supports client certs as well.
 
-Once a certificate authority is self managed simply add the CA certificate to all browsers and mobile devices. Enjoy secure and validated certificates everywhere.  If a server service is designated for public access then self managing a certificate authority may not be the best option.  Signed certificates should still be the preferred method  to secure your public service.  The [StartCom SSL Certificate Authority][startcom_ssl] provides a free service to sign Class 1 SSL certificates.  If you are attempting payment transactions you should pay for an extended validation (EV) certificate from one of the EV issuing certificate authorities.
+Once a certificate authority is self managed simply add the CA certificate to all browsers and mobile devices. Enjoy secure and validated certificates everywhere.
+
+### Public CA Alternatives
+
+If a server service is designated for public access then self managing a certificate authority may not be the best option.  Signed certificates should still be the preferred method  to secure your public service.  
+
+1. The [StartCom SSL Certificate Authority][startcom_ssl] provides a free service to sign Class 1 SSL certificates.
+2. [CAcert.org][cacert] is a community driven certificate authority which provides free SSL certificates.
+
+If you are attempting payment transactions you should pay for an extended validation (EV) certificate from one of the EV issuing certificate authorities.  
 
 [xca]: http://sourceforge.net/projects/xca/
 [ovpn_scripts]: http://openvpn.net/index.php/open-source/documentation/howto.html#pki
@@ -73,3 +84,4 @@ Once a certificate authority is self managed simply add the CA certificate to al
 [tldp_certs]: http://www.tldp.org/HOWTO/SSL-Certificates-HOWTO/x195.html
 [startcom_ssl]: http://cert.startcom.org/
 [cert_auto]: https://github.com/berico-rclayton/certificate-automation
+[cacert]: http://www.cacert.org/
