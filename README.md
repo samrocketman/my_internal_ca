@@ -73,8 +73,8 @@ Once a certificate authority is self managed simply add the CA certificate to al
 
 If a server service is designated for public access then self managing a certificate authority may not be the best option.  Signed certificates should still be the preferred method  to secure your public service.  
 
-1. The [StartCom SSL Certificate Authority][startcom_ssl] provides a free service to sign Class 1 SSL certificates.
-2. [CAcert.org][cacert] is a community driven certificate authority which provides free SSL certificates.
+1. The [StartCom SSL Certificate Authority][startcom_ssl] provides a free service to sign Class 1 SSL certificates.  StartCom root certificates appear to be included in all popular browsers.
+2. [CAcert.org][cacert] is a community driven certificate authority which provides free SSL certificates.  Note:  See the [inclusion page][cacert_inclusion] to see which applications and distros include the cacert.org root certificates.
 
 If you are attempting payment transactions you should pay for an extended validation (EV) certificate from one of the EV issuing certificate authorities.  
 
@@ -85,3 +85,4 @@ If you are attempting payment transactions you should pay for an extended valida
 [startcom_ssl]: http://cert.startcom.org/
 [cert_auto]: https://github.com/berico-rclayton/certificate-automation
 [cacert]: http://www.cacert.org/
+[cacert_inclusion]: http://wiki.cacert.org/InclusionStatus
