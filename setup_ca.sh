@@ -27,68 +27,68 @@ fi
 #myCA is our Certificate Authority’s directory.
 #myCA/certs directory is where our server certificates will be placed.
 #myCA/newcerts directory is where openssl puts the created
-#   certificates in PEM (unencrypted) format and in the form 
-#   cert_serial_number.pem (eg 07.pem). Openssl needs this directory, 
+#   certificates in PEM (unencrypted) format and in the form
+#   cert_serial_number.pem (eg 07.pem). Openssl needs this directory,
 #   so we create it.
 #myCA/crl is where our certificate revokation list is placed.
-#myCA/private is the directory where our private keys are placed. Be 
-#   sure that you set restrictive permissions to all your private keys 
-#   so that they can be read only by root, or the user with whose 
-#   priviledges a server runs. If anyone steals your private keys, 
+#myCA/private is the directory where our private keys are placed. Be
+#   sure that you set restrictive permissions to all your private keys
+#   so that they can be read only by root, or the user with whose
+#   priviledges a server runs. If anyone steals your private keys,
 #   then things get really bad.
 mkdir -m 0755 -p "${rootdir}/myCA/private" "${rootdir}/myCA/certs" "${rootdir}/myCA/newcerts" "${rootdir}/myCA/crl"
 chmod 0700 "${rootdir}/myCA/private" "${rootdir}/myCA/newcerts"
 
 ######################################################################
-#We are going to copy the default openssl configuration file 
+#We are going to copy the default openssl configuration file
 #   (openssl.cnf) to our CA’s directory.
 #On Ubuntu it is /etc/ssl; on Fedora it is /etc/pki/tls originally called openssl.cnf
 cp ./openssl.my.cnf "${rootdir}/myCA/openssl.my.cnf"
 
 ######################################################################
-#This file does not need to be world readable, so we change its 
+#This file does not need to be world readable, so we change its
 #attributes.
 chmod 0600 "${rootdir}/myCA/openssl.my.cnf"
 
 ######################################################################
-#We also need to create two other files. This file serves as a 
+#We also need to create two other files. This file serves as a
 #database for openssl.
 touch "${rootdir}/myCA/index.txt"
 
 ######################################################################
-#The following file contains the next certificate’s serial number. 
+#The following file contains the next certificate’s serial number.
 #Since we have not created any certificates yet, we set it to "01".
 echo '01' > "${rootdir}/myCA/serial"
 
 ######################################################################
 #Things to remember about SSL file extensions
 #  KEY – Private key (Restrictive permissions should be set on this)
-#  CSR – Certificate Request (This will be signed by our CA in order 
-#        to create the server certificates. Afterwards it is not 
+#  CSR – Certificate Request (This will be signed by our CA in order
+#        to create the server certificates. Afterwards it is not
 #        needed and can be deleted)
 #  CRT – Certificate (This can be publicly distributed)
-#  PEM – We will use this extension for files that contain both the 
-#        Key and the server Certificate (Some servers need this). 
+#  PEM – We will use this extension for files that contain both the
+#        Key and the server Certificate (Some servers need this).
 #        Permissions should be restrictive on these files.
-#  CRL – Certificate Revokation List (This can be publicly 
+#  CRL – Certificate Revokation List (This can be publicly
 #        distributed)
 #Create the CA Certificate and Key
 pushd "${rootdir}/myCA/" &> /dev/null
 
 ######################################################################
-#Create a self-signed certificate with the default CA extensions which 
-#is valid for 5 years. You will be prompted for a passphrase for your 
-#CA's private key. Be sure that you set a strong passphrase. Then you 
-#will need to provide some info about your CA. Fill in whatever you 
+#Create a self-signed certificate with the default CA extensions which
+#is valid for 5 years. You will be prompted for a passphrase for your
+#CA's private key. Be sure that you set a strong passphrase. Then you
+#will need to provide some info about your CA. Fill in whatever you
 #like.  CA is for 500 years (-days).
 openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 182500
 
 ######################################################################
 #Two files are created:
-#certs/myca.crt   – This is your CA's certificate and can be publicly 
+#certs/myca.crt   – This is your CA's certificate and can be publicly
 #                   available and of course world readable.
-#private/myca.key – This is your CA’s private key. Although it is 
-#                   protected with a passphrase you should restrict 
+#private/myca.key – This is your CA’s private key. Although it is
+#                   protected with a passphrase you should restrict
 #                   access to it, so that only root can read it:
 chmod 0400 "./private/myca.key"
 
@@ -97,6 +97,7 @@ chmod 0400 "./private/myca.key"
 cp ~1/autocrl.py ./
 cp ~1/autosign.py ./
 cp ~1/cert.sh ./
+cp ~1/keystore.sh ./
 chmod 755 ./autocrl.py ./autosign.py ./cert.sh
 
 ######################################################################
