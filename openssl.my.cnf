@@ -137,7 +137,7 @@ localityName			= Locality Name (eg, city)
 localityName_default    = Pennsylvania
 
 0.organizationName		= Organization Name (eg, company)
-0.organizationName_default	= Local
+0.organizationName_default	= Gleske Internal
 
 # we can do this but it is not needed normally :-)
 #1.organizationName		= Second Organization Name (eg, company)
