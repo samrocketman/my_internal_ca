@@ -26,7 +26,7 @@ force=false
 # ARGUMENT HANDLING
 #
 
-#Short options are one letter.  If an argument follows a short opt then put a colon (:) after it
+#Short options are one letter. If an argument follows a short opt then put a colon (:) after it
 SHORTOPTS="hvc:r:x:"
 LONGOPTS="help,version,create:,crl,renew:,revoke:,force"
 usage()
@@ -47,9 +47,9 @@ DESCRIPTION:
   -v,--version       Show program version
   -c,--create CNAME  Create a key and CSR based on CNAME common name.
   --crl              Generate a new Certificate Revocation List.
-  -r,--renew CNAME   Renew a key and generate CSR based on CNAME 
+  -r,--renew CNAME   Renew a key and generate CSR based on CNAME
                      common name.
-  -x,--revoke CNAME  Renew a key and generate CSR based on CNAME 
+  -x,--revoke CNAME  Renew a key and generate CSR based on CNAME
                      common name.
   --force            Attempt to force certificate --create.
 
