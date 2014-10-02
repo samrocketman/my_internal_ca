@@ -84,6 +84,27 @@ An example follows.
 
     reqdir="/requests" cert.sh --create myserver.local
 
+### Generate a java keystore from certificates
+
+    keystore.sh myserver.local
+
+You will be prompted for a password by the script.  That password will set the
+java keystore password.
+
+### Automation
+
+If you add a `secret` file to the root of your `myCA` directory then you can
+make use of the `auto*` scripts.  The contents of the `secret` file should be
+your certificate authority password (`myca.key`).
+
+`autocrl.py` will automatically generate a certificate revocation list file.
+This is useful for cron jobbing and auto-uploading the revocation list to an
+HTTP server where clients can download the latest revocation list.
+
+`autosign.py myserver.local` will automatically generate a signed certificate.
+It is basically executing `cert.sh --create myserver.local` and automatically
+filling in the password.
+
 # Additional information and alternatives
 
 ### Private CA Alternatives
