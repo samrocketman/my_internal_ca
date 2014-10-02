@@ -35,7 +35,7 @@ topic `-subj arg`).
 
 ### A quick final step
 
-You migth want to copy `cert.sh` into your `myCA` directory or make sure that it
+You might want to copy `cert.sh` into your `myCA` directory or make sure that it
 is in your `$PATH`.
 
 # Ready to manage certificates
@@ -78,7 +78,7 @@ removed from `./myCA/certs` and the key will be removed from `./myCA/private`.
 ### Custom certificate request directory
 
 By default certificate requests will be temporarily stored in `/tmp`.  If this
-is not desired there is an optional `reqir` environment variable that can be
+is not desired there is an optional `reqdir` environment variable that can be
 passed to specify a custom temporary directory for signing certificate requests.
 An example follows.
 
