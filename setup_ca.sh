@@ -81,7 +81,7 @@ pushd "${rootdir}/myCA/" &> /dev/null
 #CA's private key. Be sure that you set a strong passphrase. Then you
 #will need to provide some info about your CA. Fill in whatever you
 #like.  CA is for 500 years (-days).
-openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 182500
+openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 7300
 
 ######################################################################
 #Two files are created:

@@ -12,8 +12,8 @@ PROGNAME="${0##*/}"
 PROGVERSION="0.1.1"
 
 #Certificate generation defaults
-strength="2048"
-length="365"
+strength="${strength:-2048}"
+length="${length:-365}"
 
 #program default variables
 create=false
@@ -187,7 +187,7 @@ if ${create};then
   openssl req -out "${reqdir}/${cname}.csr" -new -newkey rsa:${strength} -nodes -subj "${subj}" -keyout "./private/${cname}.key" -days ${length}
 
   #sign the certificate
-  openssl ca -config openssl.my.cnf -policy policy_anything -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
+  openssl ca -config openssl.my.cnf -policy policy_anything -days ${length} -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
 
   #final cleanup and security measures
   rm -f "${reqdir}/${cname}.csr"
@@ -238,7 +238,7 @@ elif ${renew};then
 
   #sign the certificate
   rm -f "./certs/${cname}.crt"
-  openssl ca -config openssl.my.cnf -policy policy_anything -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
+  openssl ca -config openssl.my.cnf -policy policy_anything -days ${length} -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
 
   #generate the current certificate revokation list
   echo "Generate a new certificate revocation list." 1>&2

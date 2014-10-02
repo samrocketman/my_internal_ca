@@ -70,7 +70,7 @@ cert_opt 	= ca_default		# Certificate field options
 # crlnumber must also be commented out to leave a V1 CRL.
 # crl_extensions	= crl_ext
 
-default_days	= 36500			# how long to certify for (100 years)
+default_days	= 7300			# how long to certify for (20 years)
 default_crl_days= 30			# how long before next CRL
 default_md	= default		# use public key default MD
 preserve	= no			# keep passed DN ordering
