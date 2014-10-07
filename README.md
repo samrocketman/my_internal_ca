@@ -1,6 +1,6 @@
 # My Internal Certificate Authority
 
-I use this lightweight set of scripts to manage my own internal certificatex
+I use this lightweight set of scripts to manage my own internal certificate
 authority.  I share them with you.  My scripts are based off of
 [Be your own CA][yourca_tut] and the comments in `setup_ca.sh` reflect it.
 
@@ -111,8 +111,8 @@ filling in the password.
 
 Using self signed certificates is always a bad idea. It's far more secure to
 self manage a certificate authority than it is to use self signed certificates.
-Running a certificate authority is easy.  There are four recommended options for
-managing a certificate authority for signing certificates.
+Running a certificate authority is easy.  Here is a short recommended list of
+scripts and resources for managing a certificate authority.
 
 1. The [xca project][xca] provides a graphical front end to certificate
    authority management in openssl.  It is available for Windows, Linux, and Mac
