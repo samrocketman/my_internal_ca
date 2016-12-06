@@ -6,7 +6,7 @@
 #GNU bash, version 4.3.46(1)-release (x86_64-pc-linux-gnu)
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
-#https://docs.docker.com/engine/articles/https/
+#https://docs.docker.com/engine/security/https/
 
 #DESCRIPTION
 #  Generate a certificate authority for private use.  This can be used on
@@ -23,8 +23,8 @@ fi
 
 #don't overwrite our existing CA
 if [ -e "${CERT_DIR}/certs/myca.crt" ]; then
-  echo "Error: Certificate authority already exists."
-  echo "CERT_DIR=${CERT_DIR}"
+  echo "Error: Certificate authority already exists." 1>&2
+  echo "CERT_DIR=${CERT_DIR}" 1>&2
   exit 1
 fi
 

@@ -6,7 +6,7 @@
 #GNU bash, version 4.3.46(1)-release (x86_64-pc-linux-gnu)
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
-#https://docs.docker.com/engine/articles/https/
+#https://docs.docker.com/engine/security/https/
 
 CERT_DIR="${CERT_DIR:-./myCA}"
 CERT_DIR="${CERT_DIR%/}"
@@ -42,7 +42,7 @@ do_revoke=true
 while [ "$#" -gt '0' ]; do
   case $1 in
     -h|--help)
-      usage
+      usage 1>&2
       exit 1
       ;;
     --crl)
@@ -63,17 +63,17 @@ DATE="$(date +%Y-%m-%d-%s)"
 
 if ${do_revoke}; then
   if [ -z "$cname" ];then
-    echo "Error: missing common-name which is used to identify client."
-    usage
+    echo "Error: missing common-name which is used to identify client." 1>&2
+    usage 1>&2
     exit 1
   fi
 
   if [ ! -e "certs/${cname}.crt" ]; then
-    echo "Certificate ${cname} does not exist.  Nothing to revoke."
+    echo "Certificate ${cname} does not exist.  Nothing to revoke." 1>&2
     exit 1
   fi
 
-  echo "Revoking certificate for ${cname}."
+  echo "Revoking certificate for ${cname}." 1>&2
 
   openssl ca -config openssl.cnf -revoke "./certs/${cname}.crt"
 
@@ -92,4 +92,4 @@ fi
 echo "Generate a new certificate revocation list." 1>&2
 openssl ca -config openssl.cnf -gencrl | openssl crl -text -noout > ./crl.pem
 cp "./crl.pem" "./crl/crl_${DATE}.pem"
-echo "Finished revoking ${cname}.  The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
+echo "Finished revoking ${cname}.  The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created." 1>&2

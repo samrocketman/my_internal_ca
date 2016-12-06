@@ -6,7 +6,7 @@
 #GNU bash, version 4.3.46(1)-release (x86_64-pc-linux-gnu)
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
-#https://docs.docker.com/engine/articles/https/
+#https://docs.docker.com/engine/security/https/
 
 CERT_DIR="${CERT_DIR:-./myCA}"
 REQ_OPTS="${REQ_OPTS:--batch -nodes}"
@@ -36,7 +36,7 @@ client=""
 while [ "$#" -gt '0' ]; do
   case $1 in
     -h|--help)
-      usage
+      usage 1>&2
       exit 1
       ;;
     *)
@@ -49,8 +49,8 @@ while [ "$#" -gt '0' ]; do
 done
 
 if [ -z "$client" ];then
-  echo "Error: missing common-name which is used to identify client."
-  usage
+  echo "Error: missing common-name which is used to identify client." 1>&2
+  usage 1>&2
   exit 1
 fi
 
@@ -63,8 +63,8 @@ extendedKeyUsage = clientAuth"
 cd "${CERT_DIR}"
 
 if [ -e "certs/${client}.crt" ]; then
-  echo "Client certificate exists.  Must revoke existing certificate."
-  echo "revoke_cert.sh ${client}"
+  echo "Client certificate exists.  Must revoke existing certificate." 1>&2
+  echo "revoke_cert.sh ${client}" 1>&2
   exit 1
 fi
 

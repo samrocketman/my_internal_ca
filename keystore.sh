@@ -97,7 +97,7 @@ if ! ${use_changeit_pass}; then
     read -s confirmpass
     echo ""
     if [ ! "${pass}" = "${confirmpass}" ]; then
-      echo "Passwords do not match.  Try again."
+      echo "Passwords do not match.  Try again." 1>&2
     fi
   done
 fi
