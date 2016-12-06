@@ -18,11 +18,16 @@ executed this will do a few things.  It will create the openssl `myCA` directory
 structure for a managed certificate authority.  All certificate authority
 information and management will be located within the `myCA` directory.
 
-There is an optional `rootdir` environment variable that can be passed to
-specify a custom home for where the `myCA` directory can be created.  An example
-follows.
+There are environment variables which can be overridden.  e.g.
 
-    rootdir="/tmp" ./setup_ca.sh
+    CERT_DIR="/tmp/myCA" ./setup_ca.sh
+
+# Environment variables
+
+* `CERT_DIR` - the directory where the certificate authority certificates and
+  other client/server certificates are output.
+* `REQ_OPTS` - additional opts to pass to the `openssl req` command in a script.
+* `CA_OPTS` - additional opts to pass to the `openssl ca` command in a script.
 
 ### Update the signed certificate subject
 

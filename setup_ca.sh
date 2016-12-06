@@ -1,109 +1,89 @@
-#!/bin/bash
+#!/bin/bash -e
 #Script by Sam Gleske
 #Thu Mar  6 23:14:29 EST 2014
-#Ubuntu 13.10
-#Linux 3.11.0-12-generic x86_64
-#GNU bash, version 4.2.45(1)-release (x86_64-pc-linux-gnu)
+#Ubuntu 16.04.1 LTS
+#Linux 4.4.0-51-generic x86_64
+#GNU bash, version 4.3.46(1)-release (x86_64-pc-linux-gnu)
 #Setup script has been adapted from instructions
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
+#https://docs.docker.com/engine/articles/https/
 
-#set the rootdir where the certificate authority myCA will be created.
-rootdir="${rootdir:-.}"
-#remove trailing slash if any
-rootdir="${rootdir%/}"
-#test to make sure that the rootdir actually exists.
-if [ ! -d "${rootdir}" ];then
-  echo "${rootdir} does not exist or is not a directory!" 1>&2
-  exit 1
-elif [ -d "${rootdir}/myCA" ];then
-  echo "CA already created at ${rootdir}/myCA.  Create it elsewhere or choose a new path." 1>&2
-  exit 1
-elif [ ! -f "./openssl.cnf" -a ! -f "./subject.example" ];then
-  echo "This setup script must be run from the repository directory where openssl.cnf and subject.example is located." 1>&2
+#DESCRIPTION
+#  Generate a certificate authority for private use.  This can be used on
+#  personal servers or for a docker server.  This CA will be used to sign both
+#  client and server sertificates for mutual authentication via TLS.
+
+CERT_DIR="${CERT_DIR:-./myCA}"
+REQ_OPTS="${REQ_OPTS:--batch -nodes}"
+CERT_DIR="${CERT_DIR%/}"
+
+if [ ! -d "${CERT_DIR}" ]; then
+  mkdir -p "${CERT_DIR}"
+fi
+
+#don't overwrite our existing CA
+if [ -e "${CERT_DIR}/certs/ca.pem" ]; then
+  echo "Error: Certificate authority already exists."
+  echo "CERT_DIR=${CERT_DIR}"
   exit 1
 fi
 
-######################################################################
-#myCA is our Certificate Authority’s directory.
-#myCA/certs directory is where our server certificates will be placed.
-#myCA/newcerts directory is where openssl puts the created
-#   certificates in PEM (unencrypted) format and in the form
-#   cert_serial_number.pem (eg 07.pem). Openssl needs this directory,
-#   so we create it.
-#myCA/crl is where our certificate revokation list is placed.
-#myCA/private is the directory where our private keys are placed. Be
-#   sure that you set restrictive permissions to all your private keys
-#   so that they can be read only by root, or the user with whose
-#   priviledges a server runs. If anyone steals your private keys,
-#   then things get really bad.
-mkdir -m 0755 -p "${rootdir}/myCA/private" "${rootdir}/myCA/certs" "${rootdir}/myCA/newcerts" "${rootdir}/myCA/crl"
-chmod 0700 "${rootdir}/myCA/private" "${rootdir}/myCA/newcerts"
 
-######################################################################
-#We are going to copy the default openssl configuration file
-#   (openssl.cnf) to our CA’s directory.
-#On Ubuntu it is /etc/ssl; on Fedora it is /etc/pki/tls originally called openssl.cnf
-cp ./openssl.cnf "${rootdir}/myCA/openssl.cnf"
+#openssl.cnf for generating a certificate authority
+opensslcnf="
+[ req ]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_ca
+[ req_distinguished_name ]
+countryName =
+countryName_default = US
+stateOrProvinceName =
+stateOrProvinceName_default = California
+localityName =
+localityName_default = Garden Grove
+organizationName =
+organizationName_default = Gleske Internal
+organizationalUnitName =
+organizationalUnitName_default = Systems
+commonName =
+commonName_default = Local Certificate Authority
+emailAddress =
+#emailAddress_default = none@example.com
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = CA:true
+"
 
-######################################################################
-#This file does not need to be world readable, so we change its
-#attributes.
-chmod 0600 "${rootdir}/myCA/openssl.cnf"
+if [ ! -e "${CERT_DIR}/openssl.cnf" ]; then
+  cp openssl.cnf "${CERT_DIR}/"
+  chmod 0600 "${CERT_DIR}/openssl.cnf"
+fi
 
-######################################################################
-#We also need to create two other files. This file serves as a
-#database for openssl.
-touch "${rootdir}/myCA/index.txt"
+cd "${CERT_DIR}"
 
-######################################################################
-#The following file contains the next certificate’s serial number.
-#Since we have not created any certificates yet, we set it to "01".
-echo '01' > "${rootdir}/myCA/serial"
+#Prepare the certificate authority for git
+for x in certs crl private newcerts;do
+  if [ ! -d "${x}" ];then
+    mkdir -p "${x}"
+    touch "${x}/.gitignore"
+  fi
+done
+chmod 0700 private
+echo '*' > ./newcerts/.gitignore
 
-######################################################################
-#Things to remember about SSL file extensions
-#  KEY – Private key (Restrictive permissions should be set on this)
-#  CSR – Certificate Request (This will be signed by our CA in order
-#        to create the server certificates. Afterwards it is not
-#        needed and can be deleted)
-#  CRT – Certificate (This can be publicly distributed)
-#  PEM – We will use this extension for files that contain both the
-#        Key and the server Certificate (Some servers need this).
-#        Permissions should be restrictive on these files.
-#  CRL – Certificate Revokation List (This can be publicly
-#        distributed)
-#Create the CA Certificate and Key
-pushd "${rootdir}/myCA/" &> /dev/null
+#Generate a CA good for 20 years.
+#If you make it longer and you could run into compatibility issues.
+openssl req -config <( echo "${opensslcnf}" ) -new -newkey rsa:4096 -sha256 \
+  -keyout private/myca.key -x509 -days 7300 -text \
+  -out certs/myca.crt ${REQ_OPTS}
 
-######################################################################
-#Create a self-signed certificate with the default CA extensions which
-#is valid for 5 years. You will be prompted for a passphrase for your
-#CA's private key. Be sure that you set a strong passphrase. Then you
-#will need to provide some info about your CA. Fill in whatever you
-#like.  CA is for 500 years (-days).
-openssl req -config openssl.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 7300
+#change appropriate permissions
+chmod 0600 private/myca.key
+chmod 0644 certs/myca.crt
 
-######################################################################
-#Two files are created:
-#certs/myca.crt   – This is your CA's certificate and can be publicly
-#                   available and of course world readable.
-#private/myca.key – This is your CA’s private key. Although it is
-#                   protected with a passphrase you should restrict
-#                   access to it, so that only root can read it:
-chmod 0400 "./private/myca.key"
-
-######################################################################
-#Copy the certificate signing executables
-cp ~1/autocrl.py ./
-cp ~1/autosign.py ./
-cp ~1/cert.sh ./
-cp ~1/keystore.sh ./
-chmod 755 ./autocrl.py ./autosign.py ./cert.sh
-
-######################################################################
-#Copy the sample subject
-cp ~1/subject.example ./subject
-echo ""
-echo "A sample subject has been created at ${rootdir}/myCA/subject"
-echo "This is the subject for your newly created certificates to be signed.  You should edit this for your org."
-echo "Note: you must leave the '/CN=' at the end of the subject."
+#configure some additional files
+if [ ! -e 'index.txt' ]; then
+  touch index.txt
+  echo '01' > serial
+fi
