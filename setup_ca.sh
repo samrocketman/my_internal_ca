@@ -18,8 +18,8 @@ if [ ! -d "${rootdir}" ];then
 elif [ -d "${rootdir}/myCA" ];then
   echo "CA already created at ${rootdir}/myCA.  Create it elsewhere or choose a new path." 1>&2
   exit 1
-elif [ ! -f "./openssl.my.cnf" -a ! -f "./subject.example" ];then
-  echo "This setup script must be run from the repository directory where openssl.my.cnf and subject.example is located." 1>&2
+elif [ ! -f "./openssl.cnf" -a ! -f "./subject.example" ];then
+  echo "This setup script must be run from the repository directory where openssl.cnf and subject.example is located." 1>&2
   exit 1
 fi
 
@@ -43,12 +43,12 @@ chmod 0700 "${rootdir}/myCA/private" "${rootdir}/myCA/newcerts"
 #We are going to copy the default openssl configuration file
 #   (openssl.cnf) to our CA’s directory.
 #On Ubuntu it is /etc/ssl; on Fedora it is /etc/pki/tls originally called openssl.cnf
-cp ./openssl.my.cnf "${rootdir}/myCA/openssl.my.cnf"
+cp ./openssl.cnf "${rootdir}/myCA/openssl.cnf"
 
 ######################################################################
 #This file does not need to be world readable, so we change its
 #attributes.
-chmod 0600 "${rootdir}/myCA/openssl.my.cnf"
+chmod 0600 "${rootdir}/myCA/openssl.cnf"
 
 ######################################################################
 #We also need to create two other files. This file serves as a
@@ -81,7 +81,7 @@ pushd "${rootdir}/myCA/" &> /dev/null
 #CA's private key. Be sure that you set a strong passphrase. Then you
 #will need to provide some info about your CA. Fill in whatever you
 #like.  CA is for 500 years (-days).
-openssl req -config openssl.my.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 7300
+openssl req -config openssl.cnf -new -x509 -extensions v3_ca -keyout "./private/myca.key" -out "./certs/myca.crt" -days 7300
 
 ######################################################################
 #Two files are created:

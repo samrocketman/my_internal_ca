@@ -20,7 +20,7 @@ if ! [ -d "./certs" -a \
        -d "./newcerts" -a \
        -d "./private" -a \
        -f "./index.txt" -a \
-       -f "./openssl.my.cnf" -a \
+       -f "./openssl.cnf" -a \
        -f "./serial" -a \
        -f "./certs/myca.crt" -a \
        -f "./private/myca.key" -a \

@@ -111,7 +111,7 @@ done
 function preflight(){
   STATUS=0
   option=0
-  if ! [ -d "./certs" -a -d "./crl" -a -d "./newcerts" -a -d "./private" -a -f "./index.txt" -a -f "./openssl.my.cnf" -a -f "./serial" -a -f "./certs/myca.crt" -a -f "./private/myca.key" -a -f "./subject" ];then
+  if ! [ -d "./certs" -a -d "./crl" -a -d "./newcerts" -a -d "./private" -a -f "./index.txt" -a -f "./openssl.cnf" -a -f "./serial" -a -f "./certs/myca.crt" -a -f "./private/myca.key" -a -f "./subject" ];then
     echo "cert.sh can only be run from a managed certicate authority directory." 1>&2
     exit 1
   fi
@@ -187,7 +187,7 @@ if ${create};then
   openssl req -out "${reqdir}/${cname}.csr" -new -newkey rsa:${strength} -nodes -subj "${subj}" -keyout "./private/${cname}.key" -days ${length}
 
   #sign the certificate
-  openssl ca -config openssl.my.cnf -policy policy_anything -days ${length} -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
+  openssl ca -config openssl.cnf -policy policy_anything -days ${length} -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
 
   #final cleanup and security measures
   rm -f "${reqdir}/${cname}.csr"
@@ -207,7 +207,7 @@ elif ${crl};then
   #generate the current certificate revokation list
   DATE="$(date +%Y-%m-%d-%s)"
   echo "Generate a new certificate revocation list." 1>&2
-  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text > ./crl.pem
+  openssl ca -config openssl.cnf -gencrl | openssl crl -text > ./crl.pem
   cp "./crl.pem" "./crl/crl_${DATE}.pem"
   echo "The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 
@@ -215,7 +215,7 @@ elif ${renew};then
   if [ -f "./certs/${cname}.crt" ];then
     #revoke the certificate
     echo "Revoke certificate." 1>&2
-    openssl ca -config openssl.my.cnf -revoke "./certs/${cname}.crt"
+    openssl ca -config openssl.cnf -revoke "./certs/${cname}.crt"
 
     #make a backup directory to store revoked certificates and keys
     if [ ! -d "./backup" ];then
@@ -238,11 +238,11 @@ elif ${renew};then
 
   #sign the certificate
   rm -f "./certs/${cname}.crt"
-  openssl ca -config openssl.my.cnf -policy policy_anything -days ${length} -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
+  openssl ca -config openssl.cnf -policy policy_anything -days ${length} -out "./certs/${cname}.crt" -infiles "${reqdir}/${cname}.csr"
 
   #generate the current certificate revokation list
   echo "Generate a new certificate revocation list." 1>&2
-  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text -noout > ./crl.pem
+  openssl ca -config openssl.cnf -gencrl | openssl crl -text -noout > ./crl.pem
   cp "./crl.pem" "./crl/crl_${DATE}.pem"
   echo "The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 
@@ -263,7 +263,7 @@ elif ${renew};then
 elif ${revoke};then
   #revoke the certificate
   echo "Revoke certificate." 1>&2
-  openssl ca -config openssl.my.cnf -revoke "./certs/${cname}.crt"
+  openssl ca -config openssl.cnf -revoke "./certs/${cname}.crt"
 
   #make a backup directory to store revoked certificates and keys
   if [ ! -d "./backup" ];then
@@ -278,7 +278,7 @@ elif ${revoke};then
 
   #generate the current certificate revokation list
   echo "Generate a new certificate revocation list." 1>&2
-  openssl ca -config openssl.my.cnf -gencrl | openssl crl -text -noout > ./crl.pem
+  openssl ca -config openssl.cnf -gencrl | openssl crl -text -noout > ./crl.pem
   cp "./crl.pem" "./crl/crl_${DATE}.pem"
   echo "Finished revoking ${cname}.  The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created."
 fi
