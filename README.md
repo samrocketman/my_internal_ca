@@ -27,7 +27,7 @@ information and management will be located within the `myCA` directory.
 
     ./setup_ca.sh
 
-# Environment variables
+### Environment variables
 
 * `CERT_DIR` - the directory where the certificate authority certificates and
   other client/server certificates are output.
