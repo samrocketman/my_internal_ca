@@ -78,5 +78,5 @@ openssl ca -config openssl.cnf -extfile <( echo "${opensslcnf}" ) \
   -in "newcerts/${client}.csr" -out "certs/${client}.crt"
 
 #change appropriate permissions
-chmod 0600 "private/${client}.crt"
+chmod 0600 "private/${client}.key"
 chmod 0644 "certs/${client}.crt"
