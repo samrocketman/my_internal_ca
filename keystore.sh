@@ -1,80 +1,123 @@
 #!/bin/bash
 #Sam Gleske
 #Wed Oct  1 23:09:28 EDT 2014
-#Fedora release 16 (Verne)
-#Linux 3.6.11-4.fc16.x86_64 x86_64
-#GNU bash, version 4.2.37(1)-release (x86_64-redhat-linux-gnu)
+#Ubuntu 16.04.1 LTS
+#Linux 4.4.0-51-generic x86_64
+#GNU bash, version 4.3.46(1)-release (x86_64-pc-linux-gnu)
 #DESCRIPTION
 #  Generate a java keystore from generated certificates
 #USAGE
 #  ./keystore.sh yourserver.com
 
-if [ -z "$1" ]; then
-  echo "No server supplied." 1>&2
-  echo "Usage: ./keystore.sh yourserver.com" 1>&2
+CERT_DIR="${CERT_DIR:-./myCA}"
+CERT_DIR="${CERT_DIR%/}"
+
+function usage() {
+cat <<EOF
+$0 [OPTIONS] common-name
+
+DESCRIPTION:
+  Generate a Java keystore from SSL X.509 certificates for a local CA.  Where
+  the common-name is typically a domain name.
+
+OPTIONS:
+  -h,--help      show help
+  --changeit     Use the default changeit password as the keystore pass.  This
+                 skips the password prompt.
+
+EXAMPLES:
+  Generate a Java keystore from X.509 certificates.
+
+    $0 example.com
+EOF
+}
+
+#common name
+server=""
+use_changeit_pass=false
+
+while [ "$#" -gt '0' ]; do
+  case $1 in
+    -h|--help)
+      usage 1>&2
+      exit 1
+      ;;
+    --changeit)
+      use_changeit_pass=true
+      shift
+      ;;
+    *)
+      if [ -z "${server}" ]; then
+        server="$1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "${server}" ]; then
+  echo "No common-name supplied." 1>&2
+  usage 1>&2
   exit 1
 fi
 
-if ! [ -d "./certs" -a \
-       -d "./crl" -a \
-       -d "./newcerts" -a \
-       -d "./private" -a \
-       -f "./index.txt" -a \
-       -f "./openssl.cnf" -a \
-       -f "./serial" -a \
-       -f "./certs/myca.crt" -a \
-       -f "./private/myca.key" -a \
-       -f "./subject" ]; then
-  echo -n "keystore.sh can only be run from a managed certicate authority" 1>&2
-  echo " directory." 1>&2
-  exit 1
-fi
+cd "${CERT_DIR}"
 
-if [ ! -f "certs/${1}.crt" -o ! -f "private/${1}.key" ]; then
-  echo "Error: no certificate or private key found for ${1}." 1>&2
+if [ ! -f "certs/${server}.crt" -o ! -f "private/${server}.key" ]; then
+  echo "Error: no certificate or private key found for ${server}." 1>&2
+  echo "CERT_DIR=${CERT_DIR}" 1>&2
   exit 1
 fi
 
 if [ ! -d "./keystores" ]; then
   mkdir keystores
 fi
+if [ ! -r "./keystores/.gitignore" ]; then
+cat > ./keystores/.gitignore <<EOF
+*.p12
+EOF
+fi
 
-if [ -f "./keystores/${1}.p12" -o -f "./keystores/${1}.keystore" ]; then
+if [ -f "./keystores/${server}.p12" -o -f "./keystores/${server}.keystore" ]; then
   echo "Keystore already exists." 1>&2
+  echo "CERT_DIR=${CERT_DIR}" 1>&2
   exit 1
 fi
 
 #grab a password to use
-pass="no"
-confirmpass="match"
-while [ ! "${pass}" = "${confirmpass}" ]; do
-  echo -n "Type a password: "
-  read -s pass
-  echo ""
-  echo -n "Verify password: "
-  read -s confirmpass
-  echo ""
-  if [ ! "${pass}" = "${confirmpass}" ]; then
-    echo "Passwords do not match.  Try again."
-  fi
-done
+pass="changeit"
+
+if ! ${use_changeit_pass}; then
+  confirmpass="match"
+  while [ ! "${pass}" = "${confirmpass}" ]; do
+    echo -n "Type a password: "
+    read -s pass
+    echo ""
+    echo -n "Verify password: "
+    read -s confirmpass
+    echo ""
+    if [ ! "${pass}" = "${confirmpass}" ]; then
+      echo "Passwords do not match.  Try again."
+    fi
+  done
+fi
 
 #aliases are stored by hostname
 #first convert certificates to pkcs12
 openssl pkcs12 -export \
-  -out "keystores/${1}.p12" \
+  -out "keystores/${server}.p12" \
   -passout "pass:${pass}" \
-  -inkey "private/${1}.key" \
-  -in "certs/${1}.crt" \
+  -inkey "private/${server}.key" \
+  -in "certs/${server}.crt" \
   -certfile "certs/myca.crt" \
-  -name "${1}"
+  -name "${server}"
 #then convert pkcs12 to a java keystore
 keytool -importkeystore \
-  -srckeystore "keystores/${1}.p12" \
+  -srckeystore "keystores/${server}.p12" \
   -srcstorepass "${pass}" \
   -srcstoretype PKCS12 \
-  -srcalias "${1}" \
+  -srcalias "${server}" \
   -deststoretype JKS \
-  -destkeystore "keystores/${1}.keystore" \
+  -destkeystore "keystores/${server}.keystore" \
   -deststorepass "${pass}" \
-  -destalias "${1}"
+  -destalias "${server}"
