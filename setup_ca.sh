@@ -22,7 +22,7 @@ if [ ! -d "${CERT_DIR}" ]; then
 fi
 
 #don't overwrite our existing CA
-if [ -e "${CERT_DIR}/certs/ca.pem" ]; then
+if [ -e "${CERT_DIR}/certs/myca.crt" ]; then
   echo "Error: Certificate authority already exists."
   echo "CERT_DIR=${CERT_DIR}"
   exit 1
@@ -83,7 +83,5 @@ chmod 0600 private/myca.key
 chmod 0644 certs/myca.crt
 
 #configure some additional files
-if [ ! -e 'index.txt' ]; then
-  touch index.txt
-  echo '01' > serial
-fi
+touch index.txt
+echo '01' > serial
