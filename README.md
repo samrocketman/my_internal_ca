@@ -2,13 +2,20 @@
 
 I use this lightweight set of scripts to manage my own internal certificate
 authority.  I share them with you.  My scripts are based off of
-[Be your own CA][yourca_tut] and the comments in `setup_ca.sh` reflect it.
+[Be your own CA][yourca_tut] and [Docker CA][docker_ca].
+
+Features:
+
+* Manage a personal certificate authority.
+* Server SAN certificates ([Subject Alternative Name][wiki_san]).
+* Client certificates for TLS [mutual authentication][wiki_ma].
+* Create Java keystores from the X.509 certificates.
 
 # How to set up
 
 System requirements
 
-* GNU/Linux
+* GNU/Linux (other platforms untested)
 * openssl tools installed
 
 ### Create the CA
@@ -18,61 +25,31 @@ executed this will do a few things.  It will create the openssl `myCA` directory
 structure for a managed certificate authority.  All certificate authority
 information and management will be located within the `myCA` directory.
 
-There are environment variables which can be overridden.  e.g.
-
-    CERT_DIR="/tmp/myCA" ./setup_ca.sh
+    ./setup_ca.sh
 
 # Environment variables
 
 * `CERT_DIR` - the directory where the certificate authority certificates and
   other client/server certificates are output.
 * `REQ_OPTS` - additional opts to pass to the `openssl req` command in a script.
-* `CA_OPTS` - additional opts to pass to the `openssl ca` command in a script.
 
-### Update the signed certificate subject
+e.g.
 
-Once you have your certificate authority set up edit the `myCA/subject` file
-which will be used as the subject when generating your certificates.  Be sure to
-leave the `/CN=` at the end of the file because after that will be the first
-argument of the `cert.sh` script.  This follows the standard openssl subject
-format so read the openssl man page to learn more (`man req` specifically the
-topic `-subj arg`).
-
-### A quick final step
-
-You might want to copy `cert.sh` into your `myCA` directory or make sure that it
-is in your `$PATH`.
-
-# Ready to manage certificates
-
-Now that you have everything set up you can start using `cert.sh` to manage your
-signed certificates.  `cert.sh` must be run from within the `myCA` working
-directory wherever it might be.  `cert.sh` will automatically fail if the
-current working directory is not the root of the `myCA` directory.  To see
-information on the `cert.sh` command see `cert.sh --help`.
+    CERT_DIR="/tmp/myCA" ./setup_ca.sh
 
 ### Sign new certificates
 
-    cert.sh --create myserver.local
+    #server certificates
+    ./server_cert.sh example.com
+    #client certificates
+    ./client_cert.sh me@example.com
 
 A new signed certificate will be placed in `./myCA/certs/` and the private key
 will be in `./myCA/private/`.
 
-### Renew certificates
-
-    cert.sh --renew myserver.local
-
-The certificate in `./myCA/certs/myserver.local.crt` and the key in
-`./myCA/private/myserver.local.key` will reflect the latest certificate.
-
-A new certificate revocation list (crl) will be generated.  The latest is stored
-in `./myCA/crl.pem` and any previously published CRLs can be viewed at
-`./myCA/crl/crl_*.pem`.  A backup of the certificate and key will be maintained
-in `./myCA/backup` which is autocreated.
-
 ### Revoke certificates
 
-    cert.sh --revoke myserver.local
+    ./revoke_cert.sh example.com
 
 A new certificate revocation list (crl) will be generated.  The latest is stored
 in `./myCA/crl.pem` and any previously published CRLs can be viewed at
@@ -80,35 +57,26 @@ in `./myCA/crl.pem` and any previously published CRLs can be viewed at
 in `./myCA/backup` which is autocreated.  The revoked certificate will be
 removed from `./myCA/certs` and the key will be removed from `./myCA/private`.
 
-### Custom certificate request directory
-
-By default certificate requests will be temporarily stored in `/tmp`.  If this
-is not desired there is an optional `reqdir` environment variable that can be
-passed to specify a custom temporary directory for signing certificate requests.
-An example follows.
-
-    reqdir="/requests" cert.sh --create myserver.local
-
 ### Generate a java keystore from certificates
 
-    keystore.sh myserver.local
+    ./keystore.sh example.com
 
 You will be prompted for a password by the script.  That password will set the
 java keystore password.
 
-### Automation
+# Security recommendations
 
-If you add a `secret` file to the root of your `myCA` directory then you can
-make use of the `auto*` scripts.  The contents of the `secret` file should be
-your certificate authority password (`myca.key`).
+Here's a few security tips if you've not managed a personal certificate
+authority before.
 
-`autocrl.py` will automatically generate a certificate revocation list file.
-This is useful for cron jobbing and auto-uploading the revocation list to an
-HTTP server where clients can download the latest revocation list.
-
-`autosign.py myserver.local` will automatically generate a signed certificate.
-It is basically executing `cert.sh --create myserver.local` and automatically
-filling in the password.
+* Keep your certificate authority offline.  For example, store it on an
+  encrypted flash drive and disconnect it from your computer when you don't need
+  to create certificates.
+* If nobody else is accessing a service except you, then a personal certificate
+  authority is arguably more trustworthy than a third party.  Install your
+  personal CA in your browsers and devices to use.
+* Publish your certificate revocation list in a place where your browsers and
+  devices can access it.
 
 # Additional information and alternatives
 
@@ -116,8 +84,10 @@ filling in the password.
 
 Using self signed certificates is always a bad idea. It's far more secure to
 self manage a certificate authority than it is to use self signed certificates.
-Running a certificate authority is easy.  Here is a short recommended list of
-scripts and resources for managing a certificate authority.
+Running a certificate authority is easy.
+
+In addition to the scripts in this repository, here is a short recommended list
+of scripts and resources for managing a certificate authority.
 
 1. The [xca project][xca] provides a graphical front end to certificate
    authority management in openssl.  It is available for Windows, Linux, and Mac
@@ -140,26 +110,34 @@ everywhere.
 
 ### Public CA Alternatives
 
-If a server service is designated for public access then self managing a
-certificate authority may not be the best option.  Signed certificates should
-still be the preferred method  to secure your public service.
+If a service you manage is designated for public access then self managing a
+certificate authority may not be the best option.  Signed Domain Validated (DV)
+certificates should still be the preferred method to secure your public service.
 
 1. The [StartCom SSL Certificate Authority][startcom_ssl] provides a free
    service to sign Class 1 SSL certificates.  StartCom root certificates appear
    to be included in all popular browsers.
 2. [CAcert.org][cacert] is a community driven certificate authority which
-   provides free SSL certificates.  Note:  See the
-   [inclusion page][cacert_inclusion] to see which applications and distros
+   provides free SSL certificates.  Note:  See the [inclusion
+   page][cacert_inclusion] to see which applications and distros
    include the cacert.org root certificates.
+3. [Let's Encrypt][lets_encrypt] is a free, automated, and open Certificate
+   Authority.
 
-If you are attempting payment transactions you should pay for an extended
-validation (EV) certificate from one of the EV issuing certificate authorities.
+If you are attempting to secure payment transactions you should pay for an
+extended validation (EV) certificate from one of the EV issuing certificate
+authorities.  DV certificates are pretty much only good at confidentiality of
+traffic and not much else.
 
-[xca]: http://sourceforge.net/projects/xca/
-[ovpn_scripts]: http://openvpn.net/index.php/open-source/documentation/howto.html#pki
-[yourca_tut]: http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
-[tldp_certs]: http://www.tldp.org/HOWTO/SSL-Certificates-HOWTO/x195.html
-[startcom_ssl]: http://cert.startcom.org/
-[cert_auto]: https://github.com/berico-rclayton/certificate-automation
 [cacert]: http://www.cacert.org/
 [cacert_inclusion]: http://wiki.cacert.org/InclusionStatus
+[cert_auto]: https://github.com/berico-rclayton/certificate-automation
+[docker_ca]: https://docs.docker.com/engine/security/https/
+[lets_encrypt]: https://letsencrypt.org/
+[ovpn_scripts]: http://openvpn.net/index.php/open-source/documentation/howto.html#pki
+[startcom_ssl]: http://cert.startcom.org/
+[tldp_certs]: http://www.tldp.org/HOWTO/SSL-Certificates-HOWTO/x195.html
+[wiki_ma]: https://en.wikipedia.org/wiki/Mutual_authentication
+[wiki_san]: https://en.wikipedia.org/wiki/Subject_Alternative_Name
+[xca]: http://sourceforge.net/projects/xca/
+[yourca_tut]: http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
