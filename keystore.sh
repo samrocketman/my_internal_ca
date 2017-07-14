@@ -85,7 +85,7 @@ if [ -f "./keystores/${server}.p12" -o -f "./keystores/${server}.keystore" ]; th
 fi
 
 #grab a password to use
-pass="changeit"
+pass="${KEYSTORE_PASS:-changeit}"
 
 if ! ${use_changeit_pass}; then
   confirmpass="match"
