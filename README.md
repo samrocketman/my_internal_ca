@@ -27,6 +27,10 @@ information and management will be located within the `myCA` directory.
 
     ./setup_ca.sh
 
+Customize the subject.
+
+    ./setup_ca.sh -subj '/C=US/ST=Pennsylvania/L=Philadelphia/O=Example Domain/OU=Systems/CN=Super Root CA'
+
 ### Environment variables
 
 * `CERT_DIR` - the directory where the certificate authority certificates and
@@ -46,6 +50,10 @@ e.g.
 
 A new signed certificate will be placed in `./myCA/certs/` and the private key
 will be in `./myCA/private/`.
+
+Issue a wildcard certificate.
+
+    bash -f ./server_cert.sh '*.example.com'
 
 ### Revoke certificates
 
