@@ -113,7 +113,7 @@ subjectAltName = ${all_alts}"
 
 cd "${CERT_DIR}"
 
-if [ -e "certs/${client}.crt" ]; then
+if [ -e "certs/${server}.crt" ]; then
   echo "Server certificate exists.  Must revoke existing certificate." 1>&2
   echo "revoke_cert.sh ${server}" 1>&2
   exit 1
@@ -126,7 +126,7 @@ openssl req -config openssl.cnf -new -newkey rsa:4096 -sha256 \
 
 #sign the CSR
 openssl ca -config openssl.cnf -extfile <( echo "${opensslcnf}" ) \
-  -in "newcerts/${server}.csr" -out "certs/${server}.crt"
+  -in "newcerts/${server}.csr" -out "certs/${server}.crt" -batch
 
 #change appropriate permissions
 chmod 0600 private/${server}.key

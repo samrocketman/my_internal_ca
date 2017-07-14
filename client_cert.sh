@@ -75,7 +75,7 @@ openssl req -config openssl.cnf -new -newkey rsa:4096 -sha256 \
 
 #sign the CSR
 openssl ca -config openssl.cnf -extfile <( echo "${opensslcnf}" ) \
-  -in "newcerts/${client}.csr" -out "certs/${client}.crt"
+  -in "newcerts/${client}.csr" -out "certs/${client}.crt" -batch
 
 #change appropriate permissions
 chmod 0600 "private/${client}.key"
