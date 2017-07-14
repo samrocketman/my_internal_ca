@@ -70,7 +70,7 @@ for x in certs crl private newcerts;do
   fi
 done
 chmod 0700 private
-echo '*' > ./newcerts/.gitignore
+echo -e '*\n!.gitignore' > ./newcerts/.gitignore
 
 #Generate a CA good for 20 years.
 #If you make it longer and you could run into compatibility issues.
