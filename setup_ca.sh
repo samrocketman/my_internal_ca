@@ -76,7 +76,7 @@ echo '*' > ./newcerts/.gitignore
 #If you make it longer and you could run into compatibility issues.
 openssl req -config <( echo "${opensslcnf}" ) -new -newkey rsa:4096 -sha256 \
   -keyout private/myca.key -x509 -days 7300 -text \
-  -out certs/myca.crt ${REQ_OPTS}
+  -out certs/myca.crt ${REQ_OPTS} "$@"
 
 #change appropriate permissions
 chmod 0600 private/myca.key
