@@ -122,20 +122,12 @@ If a service you manage is designated for public access then self managing a
 certificate authority may not be the best option.  Signed Domain Validated (DV)
 certificates should still be the preferred method to secure your public service.
 
-1. The [StartCom SSL Certificate Authority][startcom_ssl] provides a free
-   service to sign Class 1 SSL certificates.  StartCom root certificates appear
-   to be included in all popular browsers.
-2. [CAcert.org][cacert] is a community driven certificate authority which
+1. [CAcert.org][cacert] is a community driven certificate authority which
    provides free SSL certificates.  Note:  See the [inclusion
    page][cacert_inclusion] to see which applications and distros
    include the cacert.org root certificates.
-3. [Let's Encrypt][lets_encrypt] is a free, automated, and open Certificate
+2. [Let's Encrypt][lets_encrypt] is a free, automated, and open Certificate
    Authority.
-
-If you are attempting to secure payment transactions you should pay for an
-extended validation (EV) certificate from one of the EV issuing certificate
-authorities.  DV certificates are pretty much only good at confidentiality of
-traffic and not much else.
 
 [cacert]: http://www.cacert.org/
 [cacert_inclusion]: http://wiki.cacert.org/InclusionStatus
@@ -143,7 +135,6 @@ traffic and not much else.
 [docker_ca]: https://docs.docker.com/engine/security/https/
 [lets_encrypt]: https://letsencrypt.org/
 [ovpn_scripts]: http://openvpn.net/index.php/open-source/documentation/howto.html#pki
-[startcom_ssl]: http://cert.startcom.org/
 [tldp_certs]: http://www.tldp.org/HOWTO/SSL-Certificates-HOWTO/x195.html
 [wiki_ma]: https://en.wikipedia.org/wiki/Mutual_authentication
 [wiki_san]: https://en.wikipedia.org/wiki/Subject_Alternative_Name
