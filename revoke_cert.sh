@@ -90,6 +90,6 @@ fi
 
 #generate the current certificate revokation list
 echo "Generate a new certificate revocation list." 1>&2
-openssl ca -config openssl.cnf -gencrl | openssl crl -text -noout > ./crl.pem
+openssl ca -config openssl.cnf -gencrl | openssl crl -text > ./crl.pem
 cp "./crl.pem" "./crl/crl_${DATE}.pem"
 echo "Finished revoking ${cname}.  The latest ./crl.pem has been generated and ./crl/crl_${DATE}.pem has been created." 1>&2
