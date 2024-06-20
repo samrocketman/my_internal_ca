@@ -23,6 +23,9 @@ DESCRIPTION:
 OPTIONS:
   -h,--help      show help
 
+  -p,--prompt-password
+                 User prompt to encrypt the private key with a password.
+
 EXAMPLES:
   Generate a basic certificate for client auth.
 
