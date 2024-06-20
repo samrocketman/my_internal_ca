@@ -9,7 +9,7 @@
 #https://docs.docker.com/engine/security/https/
 
 CERT_DIR="${CERT_DIR:-./myCA}"
-REQ_OPTS="${REQ_OPTS:--batch -nodes}"
+REQ_OPTS="${REQ_OPTS:--batch}"
 CERT_DIR="${CERT_DIR%/}"
 
 function usage() {
@@ -30,14 +30,32 @@ EXAMPLES:
 EOF
 }
 
+function set_password() {
+  local pass1=a
+  local pass2=b
+  while [ ! "${pass1:-}" = "${pass2:-}" ]; do
+    read -ersp "Type a password: " pass1
+    read -ersp "Confirm password: " pass2
+    if [ ! "$pass1" = "$pass2" ] || [ "x${pass1:-}" = x ]; then
+      echo 'Passwords do not match; try again. (Or press ctrl+c to cancel)' >&2
+    else
+      break
+    fi
+  done
+  client_password="$pass1"
+}
+
 #common name
 client=""
-
 while [ "$#" -gt '0' ]; do
   case $1 in
     -h|--help)
       usage 1>&2
       exit 1
+      ;;
+    -p|--password-prompt)
+      set_password
+      shift
       ;;
     *)
       if [ -z "${client}" ]; then
@@ -58,7 +76,8 @@ fi
 opensslcnf="basicConstraints=CA:FALSE
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid,issuer
-extendedKeyUsage = clientAuth"
+keyUsage=critical,nonRepudiation,digitalSignature,keyEncipherment
+extendedKeyUsage=critical,clientAuth"
 
 cd "${CERT_DIR}"
 
@@ -68,8 +87,17 @@ if [ -e "certs/${client}.crt" ]; then
   exit 1
 fi
 
-#create the key and CSR
-openssl req -config openssl.cnf -new -newkey rsa:4096 -sha256 \
+#create the password or plain text private key?
+keygen_args=( -newkey rsa:4096 )
+if [ ! "x${client_password:-}" = x ]; then
+  keygen_args+=( -passout env:client_password )
+  export client_password
+else
+  keygen_args+=( -nodes )
+fi
+
+# generate private key and CSR
+openssl req -config openssl.cnf -new -sha256 "${keygen_args[@]}" \
   -keyout "private/${client}.key" -subj "/CN=${client}" -text \
   -out "newcerts/${client}.csr" ${REQ_OPTS}
 

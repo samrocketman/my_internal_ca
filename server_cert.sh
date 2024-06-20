@@ -46,6 +46,7 @@ server=""
 dns_alts=""
 ip_alts=""
 use_localhost=false
+enable_auth=false
 
 while [ "$#" -gt '0' ]; do
   case $1 in
@@ -65,6 +66,10 @@ while [ "$#" -gt '0' ]; do
     --dns-alts)
       shift
       dns_alts="$1"
+      shift
+      ;;
+    --auth)
+      enable_auth=true
       shift
       ;;
     *)
@@ -110,6 +115,13 @@ opensslcnf="basicConstraints=CA:FALSE
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid,issuer
 subjectAltName = ${all_alts}"
+
+if [ "$enable_auth" = true ]; then
+opensslcnf="${opensslcnf}
+keyUsage=critical,nonRepudiation,digitalSignature,keyEncipherment,keyAgreement
+extendedKeyUsage=critical,serverAuth
+"
+fi
 
 cd "${CERT_DIR}"
 
