@@ -23,7 +23,7 @@ DESCRIPTION:
 OPTIONS:
   -h,--help      show help
 
-  -p,--prompt-password
+  -p,--password-prompt
                  User prompt to encrypt the private key with a password.
 
 EXAMPLES:
