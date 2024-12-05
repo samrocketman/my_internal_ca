@@ -8,6 +8,10 @@
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
 #https://docs.docker.com/engine/security/https/
 
+if [ -f .env ]; then
+  source .env
+fi
+
 CERT_DIR="${CERT_DIR:-./myCA}"
 REQ_OPTS="${REQ_OPTS:--batch}"
 CERT_DIR="${CERT_DIR%/}"

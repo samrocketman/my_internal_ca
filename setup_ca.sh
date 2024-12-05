@@ -13,6 +13,10 @@
 #  personal servers or for a docker server.  This CA will be used to sign both
 #  client and server sertificates for mutual authentication via TLS.
 
+if [ -f .env ]; then
+  source .env
+fi
+
 CERT_DIR="${CERT_DIR:-./myCA}"
 REQ_OPTS="${REQ_OPTS:--batch -nodes}"
 CERT_DIR="${CERT_DIR%/}"
@@ -36,17 +40,17 @@ distinguished_name = req_distinguished_name
 x509_extensions = v3_ca
 [ req_distinguished_name ]
 countryName =
-countryName_default = US
+countryName_default = ${CA_CERT_COUNTRY:-US}
 stateOrProvinceName =
-stateOrProvinceName_default = California
+stateOrProvinceName_default = ${CA_CERT_STATE:-California}
 localityName =
-localityName_default = Garden Grove
+localityName_default = ${CA_CERT_CITY:-Garden Grove}
 organizationName =
-organizationName_default = Gleske Internal
+organizationName_default = ${CA_CERT_ORG:-Gleske Internal}
 organizationalUnitName =
-organizationalUnitName_default = Systems
+organizationalUnitName_default = ${CA_CERT_ORG_UNIT:-Systems}
 commonName =
-commonName_default = Local Certificate Authority
+commonName_default = ${CA_CERT_NAME:-Local Certificate Authority}
 emailAddress =
 #emailAddress_default = none@example.com
 [ v3_ca ]
@@ -75,7 +79,7 @@ echo -e '*\n!.gitignore' > ./newcerts/.gitignore
 #Generate a CA good for 20 years.
 #If you make it longer and you could run into compatibility issues.
 openssl req -config <( echo "${opensslcnf}" ) -new -newkey rsa:4096 -sha256 \
-  -keyout private/myca.key -x509 -days 7300 -text \
+  -keyout private/myca.key -x509 -days "${CA_CERT_EXPIRE_DAYS:-7300}" -text \
   -out certs/myca.crt ${REQ_OPTS} "$@"
 
 #change appropriate permissions

@@ -1,6 +1,10 @@
 #!/bin/bash
 
-LAN=192.168.1
+if [ -f .env ]; then
+  source .env
+fi
+
+LAN=${LAN:-192.168.1}
 args=( )
 
 showhelp() {

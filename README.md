@@ -72,6 +72,31 @@ removed from `./myCA/certs` and the key will be removed from `./myCA/private`.
 You will be prompted for a password by the script.  That password will set the
 java keystore password.
 
+# Customization via .env file
+
+You can populate a `.env` file to customize some of the options.  You can change
+the behavior of scripts based environment variables set.  The following is an
+example.
+
+```bash
+# lan_server.sh
+LAN=192.168.1
+
+# setup_ca.sh
+CA_CERT_NAME="Local Certificate Authority"
+CA_CERT_ORG="Gleske Internal"
+CA_CERT_ORG_UNIT=Systems
+CA_CERT_CITY="Garden Grove"
+CA_CERT_STATE=California
+CA_CERT_COUNTRY=US
+# 20 years
+CA_CERT_EXPIRE_DAYS=7300
+
+# all scripts
+REQ_OPTS="-batch -nodes"
+CERT_DIR=./myCA
+```
+
 # Security recommendations
 
 Here's a few security tips if you've not managed a personal certificate
