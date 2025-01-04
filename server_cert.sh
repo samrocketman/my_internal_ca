@@ -8,9 +8,14 @@
 #http://www.g-loaded.eu/2005/11/10/be-your-own-ca/
 #https://docs.docker.com/engine/security/https/
 
+if [ -f .env ]; then
+  source .env
+fi
+
 CERT_DIR="${CERT_DIR:-./myCA}"
 REQ_OPTS="${REQ_OPTS:--batch -nodes}"
 CERT_DIR="${CERT_DIR%/}"
+SERVER_EXPIRE_DAYS="${SERVER_EXPIRE_DAYS:-397}"
 
 function usage() {
 cat <<EOF
@@ -138,7 +143,7 @@ openssl req -config openssl.cnf -new -newkey rsa:4096 -sha256 \
 
 #sign the CSR
 openssl ca -config openssl.cnf -extfile <( echo "${opensslcnf}" ) \
-  -in "newcerts/${server}.csr" -out "certs/${server}.crt" -batch
+  -in "newcerts/${server}.csr" -out "certs/${server}.crt" -days "${SERVER_EXPIRE_DAYS}" -batch
 
 #change appropriate permissions
 chmod 0600 private/${server}.key

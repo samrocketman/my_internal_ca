@@ -82,6 +82,9 @@ example.
 # lan_server.sh
 LAN=192.168.1
 
+# server_cert.sh
+SERVER_EXPIRE_DAYS=397
+
 # setup_ca.sh
 CA_CERT_NAME="Local Certificate Authority"
 CA_CERT_ORG="Gleske Internal"
@@ -110,6 +113,9 @@ authority before.
   personal CA in your browsers and devices to use.
 * Publish your certificate revocation list in a place where your browsers and
   devices can access it.
+* Do not issue certificates longer than 398 days otherwise Apple devices will
+  not recognize the certificate as valid.  The default issuance has been
+  reduced from 2 years down to 397 days.  The expiration is configurable.
 
 # Additional information and alternatives
 
